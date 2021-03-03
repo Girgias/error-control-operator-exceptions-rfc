@@ -43,6 +43,63 @@ or use a custom `error_handler` specific to this section before restoring the pr
 
 But, if the `throw_on_error` declare RFC [1](https://github.com/Girgias/php-rfc-throw-on-error-declare) is accepted and added (via a new declare statement or as part of a PHP edition [2](https://github.com/php/php-rfcs/pull/2)), this would provide an additional way for incremental migration away from diagnostic messages and to exceptions.
 
+## Alternative proposals
+
+The recurrent issue with any of the alternative proposals is that their require old code to be updated, or will remain opt-in instead of becoming the default, or are orthogonal by proposing new mechanisms to handle errors.
+
+### Converting diagnostics to exceptions
+
+This proposal was mostly being floated around during the RFC discussion for adding Attributes [3](https://wiki.php.net/rfc/attributes_v2) to PHP as it would allow to use `@` as the attribute sigil.
+
+This is the most disruptive proposal out of any as it's a complete backwards incompatible break which would be similar to the transition between Python 2 and 3, and is unsound.
+
+This requires that any code written in the last 25 years would need to be updated just to cater to this change, which is in stark contrast with PHP's typical backwards compatibility philosophy.
+
+Moreover, if any such conversion is missed, or one want to convert some different diagnostics to exception at later date, the same situation would arise once again.
+
+As such we deem this proposal as unacceptable.
+
+### Using an attribute
+
+It would very likely look akin to `#[Suppress(ConcreteException::class)] expression;`, which we consider a very odd choice as attributes [3] are meant to represent metadata and not affect control flow.
+
+We believe `@<class>` is more semantic in error handling as `@` is already named and knows as the "error control operator".
+
+### Creating a new implementation
+
+One opinion is that it's better to create a new implementation instead of trying to fix the old one.
+On top of the documentation an implementation maintenance burden added upon the PHP project this requires people to migrate and use the newly provided API, which has turned out to be largely ineffective as the I/O API has been revamped within the SPL extension but the usage of the traditional I/O functions remains the de facto standard within the community.
+
+Although a reasonable proposal on a case by case basis, we deem this proposal not generic enough to handle all cases within the PHP ecosystem.
+
+### Go-style returns
+
+Error handling in Golang [4](https://blog.golang.org/error-handling-and-go) is achieved by having two return values, where one is the "real" return value and the secondary one is populated when an error is encountered.
+
+In PHP this could look something akin to:
+```php
+$fp, $err = fopen('file-path', 'r');
+
+if ($err !== null) {
+	// handle error
+}
+
+// do things with $fp
+```
+
+Where `$err` would provide the error information regardless if it is a diagnostic message (e.g. `E_WARNING`) or a `Throwable` error.
+
+We consider this an excellent orthogonal proposal which makes it more reasonable to do error handling without using exceptions for these functions, which is a style which can be more appropriate for low level code.
+However, in our opinion extending the error control operator is still a necessary step.
+
+### Optional trailing out parameter
+
+This proposal is a different take on how to improve error handling by passing an optional out parameter,
+this proposal is still a draft and can be found on GitHub [5](https://github.com/Danack/RfcErrorOrExceptionChooseWisely/blob/master/rfc_words.md).
+
+As this is a similar proposal to Go-style returns we consider this orthogonal to this proposal.
+
+
 ## Backward Incompatible Changes
 
 Any expression which threw a `Throwable` error that happens to be prefixed with the error control operator (`@`) would now be suppress and execution of the script would continue whereas previously it would halt.
@@ -96,9 +153,14 @@ After the project is implemented, this section should contain
   - a link to the PHP manual entry for the feature
   - a link to the language specification section (if any)
 
-## References 
-[1]: `throw_on_error` PHP RFC: <https://github.com/Girgias/php-rfc-throw-on-error-declare>
-[2]: Language evolution overview proposal: <https://github.com/php/php-rfcs/pull/2>
+## References
+
+[1]: `throw_on_error` PHP RFC: <https://github.com/Girgias/php-rfc-throw-on-error-declare>  
+[2]: Language evolution overview proposal: <https://github.com/php/php-rfcs/pull/2>  
+[3]: Attributes V2 RFC: <https://wiki.php.net/rfc/attributes_v2>  
+[4]: Error handling in Golang <https://blog.golang.org/error-handling-and-go>  
+[5]: "Improved error handling" draft RFC <https://github.com/Danack/RfcErrorOrExceptionChooseWisely/blob/master/rfc_words.md>  
+
 
 ## Rejected Features 
 Keep this updated with features that were discussed on the mail lists.
