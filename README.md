@@ -17,7 +17,7 @@ PHP's modern way to signal errors is via `Throwable` errors which is comprised o
 
 Extend the error control operator `@` to be able to suppress `Throwable` errors which are an instance of `Exception` emitted by the expression it precedes, on top of suppressing diagnostic messages.
 
-Add the following syntax `@<union_class_list>` to suppress any `Throwable` error which is an instance of a class within the class list, this is similar to:
+Add the following syntax `@<union_class_list>` to suppress any `Throwable` error which is an instance of a class within the class list, without suppressing diagnostic messages. This is equivalent to:
 ```php
 try {
     expression
@@ -36,8 +36,6 @@ try {
 	$result = $default;
 }
 ```
-
-As such `@<\Exception>expression` and `@expression` are identical.
 
 The value of the expression when it encounters an exception will be `null`,
 with the exception that internal functions can set the return value to another simple type (`true`, `false`, `int`, `float`) using the `RETVAL_*` macros.
