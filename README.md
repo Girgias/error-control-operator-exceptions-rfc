@@ -22,6 +22,19 @@ try {
 } catch (union_class_list) {}
 ```
 
+Where `union_class_list` refers to any type union of `Throwable` classes, for example:
+```
+$result = @<ExceptionOne|ExceptionTwo>foo() ?? $default;
+```
+Is equivalent to
+```
+try {
+	$result = foo();
+} catch (ExceptionOne|ExceptionTwo) {
+	$result = $default;
+}
+```
+
 As such `@<\Throwable>expression` and `@expression` are identical.
 
 The value of the expression when it encounters an exception will be `null`,
@@ -63,7 +76,7 @@ As such we deem this proposal as unacceptable.
 
 It would very likely look akin to `#[Suppress(ConcreteException::class)] expression;`, which we consider a very odd choice as attributes [3] are meant to represent metadata and not affect control flow.
 
-We believe `@<class>` is more semantic in error handling as `@` is already named and knows as the "error control operator".
+We believe `@<ConcreteException>` is more semantic in error handling as `@` is already named and knows as the "error control operator".
 
 ### Creating a new implementation
 
