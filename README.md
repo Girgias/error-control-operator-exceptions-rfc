@@ -11,11 +11,13 @@ Prior to the introduction to exceptions to the PHP language many functions/exten
 
 It is however near to impossible to provide a smooth upgrade path for converting such diagnostic messages to the use of exceptions, which would mean redesigning and reimplementing many functions provided by PHP.
 
+PHP's modern way to signal errors is via `Throwable` errors which is comprised of a parallel hierarchy, `Error` which are mostly emitted by the engine to signal programming error bugs, and `Exception` which are there to signal unusual situations from which the program can recover.
+
 ## Proposal
 
-Extend the error control operator `@` to be able to suppress any exception emitted by the expression it precedes.
+Extend the error control operator `@` to be able to suppress `Throwable` errors which are an instance of `Exception` emitted by the expression it precedes, on top of suppressing diagnostic messages.
 
-Add the following syntax `@<union_class_list>` to suppress only the exceptions within the class list, this is similar to:
+Add the following syntax `@<union_class_list>` to suppress any `Throwable` error which is an instance of a class within the class list, this is similar to:
 ```php
 try {
     expression
@@ -35,7 +37,7 @@ try {
 }
 ```
 
-As such `@<\Throwable>expression` and `@expression` are identical.
+As such `@<\Exception>expression` and `@expression` are identical.
 
 The value of the expression when it encounters an exception will be `null`,
 with the exception that internal functions can set the return value to another simple type (`true`, `false`, `int`, `float`) using the `RETVAL_*` macros.
@@ -43,6 +45,8 @@ This is done for backwards compatibility reasons such that a function which retu
 on error will still do so even after it has been converted to throw an exception.
 
 ## Rationale
+
+The decision to only suppress `Exception` and not `Throwable` is because instances of `Error` should *never* be caught as they signal a programming error.
 
 As stated previously many functions in PHP which have existed for a long time use diagnostic messages to indicate failure states, but if they would be designed today they would most likely use an exception instead.
 The main area where this is true are functions which relate to I/O and the idiomatic use is to
